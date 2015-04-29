@@ -33,6 +33,7 @@ class neuralNetwork:
         for i in range(1, self.layers-1):
             self.input[i] = np.dot(self.weights[i-1], self.outputs[i-1])
             self.outputs[i] = self.sgm(self.input[i])
+
         return self.outputs[-1]
 
 
