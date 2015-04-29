@@ -41,7 +41,7 @@ for row in movie_data:
         movie[5] = row[4]
     if row[2] == "budget" and b_count < 1:
         movie[1] = re.sub('\D', "", row[3])
-        b_count += 1
+        b_count += 1git
     if row[2] == "genres" and g_count < 1:
         movie[2] = genre_map[row[3]]
         g_count += 1
