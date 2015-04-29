@@ -5,12 +5,12 @@ import numpy as np
 import re
 
 DATA = "allmovies.csv"
-OUTPUT = "smaller_movies_no_rating.csv"
+OUTPUT = "smaller_movies_no_gross.csv"
 
 file = open(DATA)
 movie_data = csv.reader(file)
 
-matrix = np.array(["title", "budget", "genre", "mpaa", "runtimes",  "gross"])
+matrix = np.array(["title", "budget", "genre", "mpaa", "runtimes", "rating"])
 
 b_count, g_count, gr_count, ra_count, ru_count, i_count = (0,)*6
 old_movie = ""
@@ -35,7 +35,7 @@ rating_map["PG-"] = 3
 
 for row in movie_data:
     if old_movie != row[0]:
-        if b_count == 1 and g_count == 1 and ra_count == 1 and ru_count == 1 and gr_count == 1:
+        if b_count == 1 and g_count == 1 and ra_count == 1 and ru_count == 1:
             matrix = np.vstack((matrix,movie))
             count += 1
             if count == 500:
@@ -44,6 +44,7 @@ for row in movie_data:
         movie = np.zeros([6], dtype="S100")
         b_count, g_count, gr_count, ra_count, ru_count = (0,)*5
         movie[0] = row[1]
+        movie[5] = row[4]
     if row[2] == "budget" and b_count < 1:
         movie[1] = re.sub('\D', "", row[3])
         b_count += 1
@@ -76,9 +77,9 @@ for row in movie_data:
     if row[2] == "runtimes" and ru_count < 1:
         movie[4] = re.sub('\D', "", row[3])
         ru_count += 1
-    if row[2] == "gross" and gr_count < 1:
+    """if row[2] == "gross" and gr_count < 1:
         movie[5] = re.sub('\D', "", row[3])
-        gr_count += 1
+        gr_count += 1"""
 
 
 
