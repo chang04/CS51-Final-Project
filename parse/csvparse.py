@@ -5,7 +5,7 @@ import numpy as np
 import re
 
 DATA = "allmovies.csv"
-OUTPUT = "smaller_movies_no_gross.csv"
+OUTPUT = "500movies_no_gross.csv"
 
 file = open(DATA)
 movie_data = csv.reader(file)
