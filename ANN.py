@@ -30,17 +30,15 @@ class NeuralNetwork:
         self.layerIn = []
         self.layerOut = []
 
-        dim = input.shape[0]
-
         for i in range(self.layers):
             if i == 0:
-                layer = self.weights[0].dot(np.vstack((input.transpose(), np.ones([1,dim]))))
+                layer = self.weights[0].dot(np.vstack((input.transpose(), np.ones([1,input.shape[0]]))))
             else:
-                layer = self.weights[i].dot(np.vstack((self.layerOut[-1], np.ones([1,dim]))))
+                layer = self.weights[i].dot(np.vstack((self.layerOut[-1], np.ones([1,input.shape[0]]))))
             self.layerIn.append(layer)
             self.layerOut.append(self.sgm(layer))
 
-        return (self.layerOut[-1]).transpose()
+        return self.layerOut[-1].T
 
     def delta(self, input, y):
         output = []
@@ -49,31 +47,46 @@ class NeuralNetwork:
         for i in reversed(range(self.layers)):
             if i == self.layers-1:
                 error = y_hat - y
-                output.append(self.dersgm(y_hat) * error)
+                output.append(error * self.dersgm(y_hat))
             else:
-                error = self.weights[i+1][:, :-1].dot(output[-1])
-                output.append(self.dersgm(self.layerOut[i]) * error)
+                output_with_bias = np.hstack((output[-1], [[1]]))
+                error = self.weights[i+1][:,:-1].T.dot(output_with_bias)
+                output.append(self.dersgm(self.layerIn[i]) * error)
 
         return output
 
     def weight_delta(self, deltas):
         instance_weight_list = []
+
         ordered_deltas = list(reversed(deltas))
         output = []
 
         for i in range(self.layers):
             if i == 0:
-                instance_weight_list.append(ordered_deltas[i].T * input)
-                print input
+                """with_bias = np.vstack((input.T, np.ones(self.shape[0])))"""
+                instance_weight_list.append(input.T.dot(ordered_deltas[i]))
             else:
-                instance_weight_list.append(ordered_deltas[i].T * self.layerOut[i])
+                """with_bias = np.vstack((self.layerOut[i], np.ones(self.shape[0])))"""
+                instance_weight_list.append(self.layerOut[i].dot(ordered_deltas))
 
+            output.append(sum(instance_weight_list))
+            instance_weight_list = []
 
-        return instance_weight_list
+        return output
+
+    def update_weights(self, weight_deltas, learning_rate):
+        for i in range(self.layers):
+
+            self.weights[i] = self.weights[i]-\
+                              (learning_rate * weight_deltas[i]).T
+        return self.weights
 
 bpn = NeuralNetwork([2,2,1])
 input = np.array([[1,2],[3,4]])
-output = np.array([2,5])
-deltas = bpn.delta(input, output)
-bpn.weight_delta(deltas)
-"""print bpn.weight_delta(deltas)"""
+input2 = np.array([[1,2]])
+output = np.array([[5]])
+
+bpn.run(input2)
+
+print bpn.delta(input2, output)
+
