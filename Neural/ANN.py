@@ -44,6 +44,7 @@ class NeuralNetwork:
         deltas = []
         y_hat = self.run(input)
 
+
         #Calculate deltas
         for i in reversed(range(self.layers)):
 
@@ -54,7 +55,6 @@ class NeuralNetwork:
                 #returns delta, k rows for k inputs, m columns for m nodes
                 deltas.append(error * self.dersgm(y_hat))
             else:
-
                 error = deltas[-1].dot(self.weights[i+1][:,:-1])
                 deltas.append(self.dersgm(self.layerOut[i]).T * error)
 
@@ -91,21 +91,21 @@ class NeuralNetwork:
 
     def train(self, input, target, lr, run_iter):
         for i in range(run_iter):
-            if i % 100000 == 0:
+            if i % 10000 == 0:
                 print self.backpropogate(input, target, lr)
 
 
 
 
-bpn = NeuralNetwork([2,2,1])
+"""bpn = NeuralNetwork([2,2,1])
 y = np.array([[1,2],[3,4],[9,1]])
 x = np.array([[1,2]])
 z = np.array([[0,0],[1,1],[0,1],[1,0]])
 target = np.array([[0.05],[0.05],[0.95],[0.95]])
 output = np.array([[6]])
 
+bpn.train(z,target,.2,1000)"""
 
-bpn.train(z, target, .2, 10000000)
 
 
 
