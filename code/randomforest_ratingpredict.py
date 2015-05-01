@@ -4,8 +4,6 @@
 
 import csv
 import numpy as np
-import scipy as sp
-import pylab as pl
 
 csv_filename = '../data/1500movies(train).csv'
 

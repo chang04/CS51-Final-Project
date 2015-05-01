@@ -4,7 +4,7 @@ import numpy as np
 actualrating = []
 prediction = []
 
-csv_filename = 'parse/500movies(testvalidation).csv'
+csv_filename = '../data/500movies(testvalidation).csv'
 csv_filename1 = 'Prediction/predictions_500.csv'
 
 with open(csv_filename, 'r') as csv_fh:
