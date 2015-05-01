@@ -16,8 +16,6 @@ class NeuralNetwork:
         for i in range(0,self.layers):
             n = shape[i]
             m = shape[i+1]
-            print n
-            print m
             self.weights.append(np.random.normal(scale=0.2, size = (m,n+1)))
 
     def sgm(self, x):
@@ -46,6 +44,7 @@ class NeuralNetwork:
         deltas = []
         y_hat = self.run(input)
 
+
         #Calculate deltas
         for i in reversed(range(self.layers)):
 
@@ -56,7 +55,6 @@ class NeuralNetwork:
                 #returns delta, k rows for k inputs, m columns for m nodes
                 deltas.append(error * self.dersgm(y_hat))
             else:
-
                 error = deltas[-1].dot(self.weights[i+1][:,:-1])
                 deltas.append(self.dersgm(self.layerOut[i]).T * error)
 
@@ -93,7 +91,7 @@ class NeuralNetwork:
 
     def train(self, input, target, lr, run_iter):
         for i in range(run_iter):
-            if i % 100000 == 0:
+            if i % 10000 == 0:
                 print self.backpropogate(input, target, lr)
 
 

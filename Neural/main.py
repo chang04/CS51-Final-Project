@@ -8,11 +8,11 @@ reader=csv.reader(open("1500movie_data.csv","rb"),delimiter=',')
 input = list(reader)
 input = np.array(input)
 outputs = input[1:,[6]]
+outputs = np.array(outputs, np.float)
 input = input[1:,[1,2,3,4,5]]
 input = np.array(input, np.float)
 
-print input[0]
 
 NeuralNetwork = ANN.NeuralNetwork([5,5,1])
-NeuralNetwork.train(input, outputs, .5, 1000)
+NeuralNetwork.train(input, outputs, .5, 100000)
 
