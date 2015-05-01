@@ -12,8 +12,11 @@ runtime = []
 rating = []
 gross = []
 ndat = 1500
+mdepth = 10
+mtry = 3
+ncol = 5
 gr = []
-trsubset = np.zeros((1500, 5))
+trsubset = np.zeros((ndat, ncol))
 
 with open(csv_filename, 'r') as csv_fh:
 
@@ -45,10 +48,41 @@ gross = np.array(gross)
 #pl.plot(gross, rating, 'o', color = 'b')
 #pl.show()
 
-def decisiontree(mdepth, data, feature):
+def decisiontree(md, dat, feature, mtry):
     treefeat = np.zeros((ndat, mtry))
-    for y in range(0, ndat):
-        treefeat
+    for x in range(0, ndat):
+        for y in range(0, mtry):
+            treefeat[x][y] = dat[x][feature[y]]
+    #print(treefeat)
+    def build(data):
+        if len(data) == 0:
+            return treenode()
+        curr_gini = giniimpurity(data)
+
+        opt_gain = 0.
+        opt_crit = None
+        opt_set = None
+
+        colcount = len(data[1]) - 1
+        for x in range(0, colcount):
+            colval = {}
+            for film in data:
+                colval[film[x]] = 1
+            for val in colval.keys():
+                (s1, s2) = divideset(data, x, val)
+                p = float(len(s1)) / len(data)
+                gain = curr_gini - p*giniimpurity(s1) - (1-p)*giniimpurity(s2)
+                if gain > opt_gain and len(s1) > 0 and len(s2) > 0:
+                    opt_gain = gain
+                    opt_crit = (x, val)
+                    opt_set = (s1, s2)
+        if opt_gain > 0:
+            tBranch = build(opt_set[0])
+            fBranch = build(opt_set[1])
+            return treenode(col = opt_crit[0], val = opt_crit[1], tnode = tBrance, fnode = fBranch)
+        else:
+            return treenode(res = uniquecounts(data))
+    tree = build(treefeat)
 
 def randomforest(B, mtry):
     for x in range(1, B + 1):
@@ -58,14 +92,14 @@ def randomforest(B, mtry):
                 trsubset[y][z] = total[z][ran]
                 gr.append(gross[ran])
         featsubset = np.random.choice(5, mtry, replace = False)
-        decisiontree(trsubset, featsubset, mtry)
+        decisiontree(mdepth, trsubset, featsubset, mtry)
 
 def main():
     randomforest(1, 3)
 
 #representation of tree as a decisionnode class;
 #referenced "Programming Collective Intelligence" by Toby Segaran
-class decisionnode:
+class treenode:
     def __init__(self, col=-1, val=None, res=None, tnode=None, fnode=None):
         self.col = col
         self.val = val
@@ -74,32 +108,39 @@ class decisionnode:
         self.fnode = fnode
 
 def divideset(rows, column, value):
-    splitfn = None
-    if isinstance(value, int) or isinstance(value, float):
-        splitfn = lambda row:row[column] >= value
-    else:
-        splitfn = lambda row:row[column] == value
-
-    set1 = [row for row in rows if split_function(row)]
-    set2 = [row for row in rows if not split_function(row)]
+    splitfn = lambda row:row[column] >= value
+    set1 = [row for row in rows if splitfn(row)]
+    set2 = [row for row in rows if not splitfn(row)]
     return (set1, set2)
 
 # Gini impurity tells us the probability of a mistake in categorizing that item.
 def giniimpurity(lst):
     total = len(lst)
     counts = {}
-    for i in lst:
-        counts.setdefault(i,0)
-        counts[i]+=1
-
+    for dat in lst:
+        last = dat[len(dat) - 1]
+        if last not in counts:
+            counts[last] = 0
+        counts[last] += 1
     impurity = 0
-    for j in lst:
+    for j in counts:
         f1 = float(counts[j]) / total
-        for k in lst:
+        for k in counts:
             if j == k : continue
             f2 = float(counts[k]) / total
             impurity += (f1 * f2)
-    return imp
+    return impurity
+
+# Create counts of possible results (the last column of
+# each row is the result)
+def uniquecounts(rows):
+    results={}
+    for row in rows:
+        # The result is the last column
+        r=row[len(row)-1]
+        if r not in results: results[r]=0
+        results[r]+=1
+    return results
 
 if __name__ == "__main__":
     main()
