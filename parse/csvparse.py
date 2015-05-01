@@ -5,7 +5,7 @@ import numpy as np
 import re
 
 DATA = "allmovies.csv"
-OUTPUT = "500movies_with_gross.csv"
+OUTPUT = "1500movies_with_gross.csv"
 
 file = open(DATA)
 movie_data = csv.reader(file)
@@ -38,7 +38,7 @@ for row in movie_data:
         if b_count == 1 and g_count == 1 and ra_count == 1 and ru_count == 1 and gr_count == 1:
             matrix = np.vstack((matrix,movie))
             count += 1
-            if count == 500:
+            if count == 1500:
                 break
         old_movie = row[0]
         movie = np.zeros([7], dtype="S100")
