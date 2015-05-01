@@ -16,7 +16,7 @@ class NeuralNetwork:
         for i in range(0,self.layers):
             n = shape[i]
             m = shape[i+1]
-            self.weights.append(np.random.normal(0, 1, size = (m,n+1)))
+            self.weights.append(np.random.normal(scale=0.2, size = (m,n+1)))
 
     def sgm(self, x):
         return 1/(1+np.exp(-x))
@@ -58,33 +58,29 @@ class NeuralNetwork:
                 error = deltas[-1].dot(self.weights[i+1][:,:-1])
                 deltas.append(self.dersgm(self.layerOut[i]).T * error)
 
-
-
         #Calculate weight-deltas
         wdelta = []
-
-        ordered_deltas = list(reversed(deltas))
+        ordered_deltas = list(reversed(deltas)) #reverse order because created backwards
 
         #returns weight deltas, k rows for k nodes, m columns for m next layer nodes
         for i in range(self.layers):
             if i == 0:
                 #add bias
                 input_with_bias = np.vstack((input.T, np.ones(input.shape[0])))
-
                 #some over n rows of deltas for n training examples to get one delta for all examples
                 #for all nodes
-                new_deltas = np.sum(ordered_deltas[i], axis=0)
-                wdelta.append(new_deltas * input_with_bias)
+                wdelta.append(ordered_deltas[i].T.dot(input_with_bias.T))
             else:
                 with_bias = np.vstack((self.layerOut[i-1], np.ones(input.shape[0])))
-                new_deltas = np.sum(ordered_deltas[i], axis=0)
-                wdelta.append(new_deltas * with_bias)
+                wdelta.append(ordered_deltas[i].T.dot(with_bias.T))
+
+
 
         #update_weights
         def update_weights(self, weight_deltas, learning_rate):
             for i in range(self.layers):
                 self.weights[i] = self.weights[i] +\
-                                  (learning_rate * weight_deltas[i].T)
+                                  (learning_rate * weight_deltas[i])
 
 
         update_weights(self, wdelta, learning_rate)
@@ -95,18 +91,21 @@ class NeuralNetwork:
 
     def train(self, input, target, lr, run_iter):
         for i in range(run_iter):
-            if i % 10 == 0:
+            if i % 100000 == 0:
                 print self.backpropogate(input, target, lr)
 
 
 
+
 bpn = NeuralNetwork([2,2,1])
-y = np.array([[1,2],[3,4]])
+y = np.array([[1,2],[3,4],[9,1]])
 x = np.array([[1,2]])
-output = np.array([[5]])
+z = np.array([[0,0],[1,1],[0,1],[1,0]])
+target = np.array([[0.05],[0.05],[0.95],[0.95]])
+output = np.array([[6]])
 
 
-bpn.train(y, output, 1, 1000)
+bpn.train(z, target, .2, 10000000)
 
 
 
