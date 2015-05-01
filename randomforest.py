@@ -3,7 +3,7 @@ import numpy as np
 import scipy as sp
 import pylab as pl
 
-csv_filename = 'parse/1500movie_data.csv'
+csv_filename = 'parse/1500movies_with_gross.csv'
 
 budget = []
 genre = []
@@ -12,6 +12,7 @@ runtime = []
 rating = []
 gross = []
 ndat = 1500
+odat = 500
 ncol = 6
 gr = []
 trsubset = np.zeros((ndat, ncol))
@@ -56,40 +57,75 @@ def decisiontree(md, dat, feature):
 
     # Recursive function for constructing a decision tree
     def build(data, i):
-
+        print("ininininininininiinininininininininininininininini")
         # optimal values to keep track of
         opt_infogain = 0.
         opt_cond = None
         opt_split = None
         var = variance(data)
-
+        inn = 0
         if len(data) == 0:
             return treenode()
 
         for x in feature:
-            tempdat = []
+            print(feature)
+            print(x)
+            print("int = " + str(inn))
+            inn+=1
+            tempdat = {}
             for film in data:
-                tempdat.append(film[x])
+                tempdat[film[x]] = 0
+            print(len(tempdat))
             for val in tempdat:
                 (d1, d2) = binsplit(data, x, val)
                 p = float(len(d1)) / len(data)
-                print(p)
+                #print(p)
                 gain = var - p*variance(d1) - (1-p)*variance(d2)
                 if gain > opt_infogain and len(d1) > 0 and len(d2) > 0:
                     opt_infogain = gain
                     opt_cond = (x, val)
                     opt_split = (d1, d2)
         if opt_infogain > 0 and i < md:
+            print("aaaaaaaaaaaaaaannnnnnnnnnnnnnnnnddddddddddd innnnnnnnnnt is: " + str(i))
             return treenode(col = opt_cond[0], val = opt_cond[1], tnode = build(opt_split[0], i+1), fnode = build(opt_split[1], i+1))
         else:
             return treenode(res = count(data))
     tree = build(dat, 0)
-    printtree(tree)
+    #printtree(tree)
+    prediction = []
+    obudget = []
+    ogenre = []
+    ompaa = []
+    oruntime = []
+    orating = []
+
+    test_filename = 'parse/500movies_no_gross.csv'
+    with open(test_filename, 'r') as csv_fh:
+
+        reader = csv.reader(csv_fh)
+
+        # Skip the header line
+        next(reader, None)
+
+        # Loop over the file by rows and fill in arrays for features
+        for row in reader:
+            obudget.append(float(row[1]))
+            ogenre.append(float(row[2]))
+            ompaa.append(float(row[3]))
+            oruntime.append(float(row[4]))
+            orating.append(float(row[5]))
+    print(len(obudget))
+
+    for x in range(0, odat):
+            prediction.append(predict([obudget[x], ogenre[x], ompaa[x], oruntime[x], orating[x]], tree))
+    prediction = np.array(prediction)
+    return prediction
 
 # Construct a random forest by aggregating B decision trees with
 # Boostrapped data subset and random selection without replacement
 # of the features
 def randomforest(B, mtry, mdepth):
+    summ = 0
     for x in range(1, B + 1):
         for y in range(0, ndat):
             ran = np.random.randint(1, ndat)
@@ -97,10 +133,19 @@ def randomforest(B, mtry, mdepth):
                 trsubset[y][z] = total[z][ran]
                 gr.append(gross[ran])
         featsubset = np.random.choice(5, mtry, replace = False)
-        decisiontree(mdepth, trsubset, featsubset)
+        summ += decisiontree(mdepth, trsubset, featsubset)
+    prediction = summ / B
+    print(prediction)
+    return prediction
 
 def main():
-    randomforest(1, 3, 2)
+    prediction = randomforest(10, 2, 5)
+    output = 'predictions_500.csv'
+    with open(output, "w+") as f:
+        f.write("Prediction\n")
+        for i in prediction:
+            f.write("%d\n" % i)
+
 
 # Representation of tree as a decisionnode class;
 # referenced "Programming Collective Intelligence" by Toby Segaran
@@ -149,6 +194,23 @@ def printtree(tree,indent=''):
         printtree(tree.tnode,indent+'  ')
         print indent+'F->',
         printtree(tree.fnode,indent+'  ')
+
+def predict(inp, tree):
+    if tree.res != None:
+        summ = 0
+        num = 0
+        for key in tree.res:
+            summ += key * tree.res[key]
+            num += tree.res[key]
+        return summ / num
+    else:
+        v = inp[tree.col]
+        branch = None
+        if v >= tree.val:
+            branch = tree.tnode
+        else:
+            branch = tree.fnode
+        return predict(inp, branch)
 
 if __name__ == "__main__":
     main()
