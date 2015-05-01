@@ -63,7 +63,26 @@ def randomforest(B, mtry):
 
 def main():
     randomforest(2, 3)
-    print(trsubset)
+    print(trsubset)    
 
 if __name__ == "__main__":
     main()
+    
+    
+    
+# Gini impurity tells us the probability of a mistake in categorizing that item. 
+def giniimpurity(lst):
+  total = len(lst)
+  counts = {}
+  for i in lst:
+    counts.setdefault(i,0)
+    counts[i]+=1
+
+  impurity = 0
+  for j in lst:
+    f1 = float(counts[j]) / total
+    for k in lst:
+      if j == k : continue
+      f2 = float(counts[k]) / total
+      impurity += (f1 * f2)
+  return imp
