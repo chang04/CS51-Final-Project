@@ -1,0 +1,3 @@
+CS51 Final Project - Movie Ratings Predictor using Random Forests and Support Vector Regression Algorithm by Peter Chang, Zachry Bai, Dor Baruch, Ann Hwang
+
+seas-usernames:zachrybai, dorbaruch, chang04, annhwang
