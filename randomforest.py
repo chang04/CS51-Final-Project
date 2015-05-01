@@ -3,7 +3,7 @@ import numpy as np
 import scipy as sp
 import pylab as pl
 
-csv_filename = 'train.csv'
+csv_filename = 'parse/1500movie_data.csv'
 
 budget = []
 genre = []
@@ -14,7 +14,6 @@ gross = []
 ndat = 1500
 gr = []
 trsubset = np.zeros((1500, 5))
-print(trsubset)
 
 with open(csv_filename, 'r') as csv_fh:
 
@@ -41,9 +40,9 @@ runtime = np.array(runtime)
 rating = np.array(rating)
 gross = np.array(gross)
 
-#print(np.argmax(budget))
-#pl.plot(budget, rating, 'o', color = 'b')
-#pl.show()
+print(np.argmax(gross))
+pl.plot(gross, rating, 'o', color = 'b')
+pl.show()
 
 #def decisiontree(data, feature):
     #use CART to create a decisiontree
