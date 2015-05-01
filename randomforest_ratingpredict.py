@@ -1,9 +1,13 @@
+# Implementation of Random Forest Algorithm:
+# Referenced "Programming Collective Intelligence" by Toby Segaran for
+# general direction
+
 import csv
 import numpy as np
 import scipy as sp
 import pylab as pl
 
-csv_filename = 'Neural/1500movies_with_gross.csv'
+csv_filename = 'parse/1500movies(train).csv'
 
 budget = []
 genre = []
@@ -14,9 +18,9 @@ gross = []
 ndat = 1500
 odat = 500
 ncol = 6
-gr = []
 trsubset = np.zeros((ndat, ncol))
 
+# Loop over the data set
 with open(csv_filename, 'r') as csv_fh:
 
     reader = csv.reader(csv_fh)
@@ -34,7 +38,7 @@ with open(csv_filename, 'r') as csv_fh:
         gross.append(float(row[6]))
 
 # Store the data as numpy array
-total = [budget, genre, mpaa, runtime, rating, gross]
+total = [budget, genre, mpaa, runtime, gross, rating]
 budget = np.array(budget)
 genre = np.array(genre)
 mpaa = np.array(mpaa)
@@ -42,64 +46,66 @@ runtime = np.array(runtime)
 rating = np.array(rating)
 gross = np.array(gross)
 
-#print(np.argmax(gross))
-#pl.plot(gross, rating, 'o', color = 'b')
-#pl.show()
-
 # Create individual decision tree with the maximum depth md
 #and the given subset of data and features
 def decisiontree(md, dat, feature):
-    #treefeat = np.zeros((ndat, 3))
-    #for x in range(0, ndat):
-    #    for y in range(0, 3):
-    #        treefeat[x][y] = dat[x][feature[y]]
-    #print(treefeat)
+    # md : maximum depth of the tree
+    # dat : data to put through the tree
+    # feature : feature to split the data by in the nodes
 
     # Recursive function for constructing a decision tree
     def build(data, i):
-        print("ininininininininiinininininininininininininininini")
+
+        print("ITERATION: " + str(i))
         # optimal values to keep track of
         opt_infogain = 0.
         opt_cond = None
         opt_split = None
         var = variance(data)
-        inn = 0
+
         if len(data) == 0:
             return treenode()
 
+        debugint = 0
+
         for x in feature:
-            print(feature)
-            print(x)
-            print("int = " + str(inn))
-            inn+=1
+            print("loop = " + str(debugint))
+            debugint += 1
             tempdat = {}
+
             for film in data:
                 tempdat[film[x]] = 0
-            print(len(tempdat))
+
+            print("number of unique vals in col: " + str(len(tempdat)))
+
             for val in tempdat:
                 (d1, d2) = binsplit(data, x, val)
                 p = float(len(d1)) / len(data)
-                #print(p)
-                gain = var - p*variance(d1) - (1-p)*variance(d2)
-                if gain > opt_infogain and len(d1) > 0 and len(d2) > 0:
-                    opt_infogain = gain
+                infogain = var - (p*variance(d1) + (1-p)*variance(d2))
+
+                if infogain > opt_infogain and len(d1) > 0 and len(d2) > 0:
+                    opt_infogain = infogain
                     opt_cond = (x, val)
                     opt_split = (d1, d2)
+
         if opt_infogain > 0 and i < md:
-            print("aaaaaaaaaaaaaaannnnnnnnnnnnnnnnnddddddddddd innnnnnnnnnt is: " + str(i))
-            return treenode(col = opt_cond[0], val = opt_cond[1], tnode = build(opt_split[0], i+1), fnode = build(opt_split[1], i+1))
+            return treenode(col = opt_cond[0], val = opt_cond[1], tnode = build(opt_split[0], i + 1), fnode = build(opt_split[1], i + 1))
         else:
             return treenode(res = count(data))
+
+    # Train the tree
     tree = build(dat, 0)
-    #printtree(tree)
+    printtree(tree)
+
+    # Use the trained tree to predict movie ratings
     prediction = []
     obudget = []
     ogenre = []
     ompaa = []
     oruntime = []
-    orating = []
+    ogross = []
 
-    test_filename = 'parse/500movies_no_gross.csv'
+    test_filename = 'parse/500movies(testvalidation).csv'
     with open(test_filename, 'r') as csv_fh:
 
         reader = csv.reader(csv_fh)
@@ -113,11 +119,10 @@ def decisiontree(md, dat, feature):
             ogenre.append(float(row[2]))
             ompaa.append(float(row[3]))
             oruntime.append(float(row[4]))
-            orating.append(float(row[5]))
-    print(len(obudget))
+            ogross.append(float(row[6]))
 
     for x in range(0, odat):
-            prediction.append(predict([obudget[x], ogenre[x], ompaa[x], oruntime[x], orating[x]], tree))
+        prediction.append(predict([obudget[x], ogenre[x], ompaa[x], oruntime[x], ogross[x]], tree))
     prediction = np.array(prediction)
     return prediction
 
@@ -125,30 +130,40 @@ def decisiontree(md, dat, feature):
 # Boostrapped data subset and random selection without replacement
 # of the features
 def randomforest(B, mtry, mdepth):
+    # B : number of trees
+    # mtry : number of subset of features used for individual decision trees
+    # mdepth : maximum depth of decision trees
+
     summ = 0
+
+    # Aggregate and average the inidividual tree's regression prediction
     for x in range(1, B + 1):
         for y in range(0, ndat):
             ran = np.random.randint(1, ndat)
             for z in range(0, 6):
                 trsubset[y][z] = total[z][ran]
-                gr.append(gross[ran])
+
         featsubset = np.random.choice(5, mtry, replace = False)
         summ += decisiontree(mdepth, trsubset, featsubset)
+
     prediction = summ / B
-    print(prediction)
     return prediction
 
+# Main function
 def main():
+
     prediction = randomforest(10, 2, 5)
-    output = 'predictions_500.csv'
+    output = 'Prediction/predictions_500.csv'
+
+    # Write the prediction as a csv file
     with open(output, "w+") as f:
         f.write("Prediction\n")
+
         for i in prediction:
-            f.write("%d\n" % i)
+            f.write("%.2f\n" % i)
 
 
 # Representation of tree as a decisionnode class;
-# referenced "Programming Collective Intelligence" by Toby Segaran
 class treenode:
     def __init__(self, col=-1, val=None, res=None, tnode=None, fnode=None):
         self.col = col
@@ -157,12 +172,18 @@ class treenode:
         self.tnode = tnode
         self.fnode = fnode
 
+# A binary split of the data based on the value of val
 def binsplit(data, col, val):
+    # data : data to split
+    # col : the column (feature) of the data to split by the value of
+    # val : the value that determines the binary split
+
     splitfn = lambda row:row[col] >= val
     d1 = [row for row in data if splitfn(row)]
     d2 = [row for row in data if not splitfn(row)]
     return (d1, d2)
 
+# Variance of the data
 def variance(data):
     gross = []
     if len(data) == 0:
@@ -172,6 +193,7 @@ def variance(data):
     variance = sum([(i - (sum(gross)/len(gross)))**2 for i in gross])/len(gross)
     return variance
 
+# Count (unique) number of data
 def count(data):
     count = {}
     for row in data:
@@ -181,21 +203,23 @@ def count(data):
         count[last] += 1
     return count
 
-def printtree(tree,indent=''):
-    # Is this a leaf node?
+# Print a rough structure of the tree
+def printtree(tree, indent=''):
+    # If the terminal node, print res
     if tree.res!=None:
         print str(tree.res)
     else:
-        # Print the criteria
         print str(tree.col)+':'+str(tree.val)+'? '
-
-        # Print the branches
         print indent+'T->',
         printtree(tree.tnode,indent+'  ')
         print indent+'F->',
         printtree(tree.fnode,indent+'  ')
 
+# Given an input, follow the tree and average the values of resulting res
 def predict(inp, tree):
+    # inp : input features of a film to predict the ratings of
+    # the decision tree to base the decision (prediction) on
+
     if tree.res != None:
         summ = 0
         num = 0
@@ -214,4 +238,3 @@ def predict(inp, tree):
 
 if __name__ == "__main__":
     main()
-
