@@ -7,7 +7,7 @@ import numpy as np
 import scipy as sp
 import pylab as pl
 
-csv_filename = 'parse/1500movies(train).csv'
+csv_filename = '../data/1500movies(train).csv'
 
 budget = []
 genre = []
@@ -105,7 +105,7 @@ def decisiontree(md, dat, feature):
     oruntime = []
     ogross = []
 
-    test_filename = 'parse/500movies(testvalidation).csv'
+    test_filename = '../data/500movies(testvalidation).csv'
     with open(test_filename, 'r') as csv_fh:
 
         reader = csv.reader(csv_fh)
