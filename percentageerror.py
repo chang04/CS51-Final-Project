@@ -1,12 +1,11 @@
 import csv
 import numpy as np
-import randomforest
 
 actualrating = []
 prediction = []
 
-csv_filename = 'parse/500movies_with_gross.csv'
-csv_filename1 = 'predictions_500.csv'
+csv_filename = 'parse/500movies(testvalidation).csv'
+csv_filename1 = 'Prediction/predictions_500.csv'
 
 with open(csv_filename, 'r') as csv_fh:
     reader = csv.reader(csv_fh)
