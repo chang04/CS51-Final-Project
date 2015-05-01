@@ -14,10 +14,11 @@ with open(csv_filename, 'r') as csv_fh:
     # Skip the header line
     next(reader, None)
 
-    # Loop over the file by rows and fill in arrays for features
+    # Use row 5 in order to put in array of ratings
     for row in reader:
         actualrating.append(float(row[5]))
 
+# Store the data as one dimensional numpy array
 actualrating = np.array(actualrating)
 
 with open(csv_filename1, 'r') as csv_fh1:
@@ -26,15 +27,12 @@ with open(csv_filename1, 'r') as csv_fh1:
     # Skip the header line
     next(reader1, None)
 
-    # Loop over the file by rows and fill in arrays for features
+    # The "rating" is already stored in the csv file
     for row in reader1:
         prediction.append(float(row[0]))
 
 # Store the data as one dimensional numpy array
 prediction = np.array(prediction)
-
-print (actualrating)
-print (prediction)
 
 # prints the percentage error of our prediction
 print (abs(actualrating - prediction))
