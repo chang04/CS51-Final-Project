@@ -1,4 +1,20 @@
-import csv
+#
+#   Neural Network class definition and methods.
+#   Includes sigmoid and hyperbolic tangent activation functions, a run method, back propagation method,
+#   and train method.
+#
+#   written with the help of consultation with a guide made by Ryan Harris in his series of Neural Network
+#   tutorials.
+#   Links:
+#   Part 1:https://www.youtube.com/watch?v=Ku7D-F6xOUM
+#   Part 2:https://www.youtube.com/watch?v=ra_s5iZ9Al4
+#   Part 3:https://www.youtube.com/watch?v=Ku7D-F6xOUM
+#   Part 4:https://www.youtube.com/watch?v=wCZG1Sn3XhE
+#
+#
+
+___authors___ = 'zachbai' and 'dorbaruch' and 'peterchang' and 'annhwang'
+
 import numpy as np
 
 class NeuralNetwork:
@@ -18,13 +34,15 @@ class NeuralNetwork:
             m = shape[i+1]
             self.weights.append(np.random.normal(scale=0.01, size = (m,n+1)))
 
+
+    #Activation Functions, sigmoid and hyperbolic tangent and their derivatives
     def sgm(self, x):
         return 1/(1+np.exp(-x))
 
+    #note: tanh already included in numpy library
     def dertanh(self, x):
         out = np.tanh(x)
         return 1 - out ** 2
-
 
     def dersgm(self, x):
         y = self.sgm(x)
@@ -38,14 +56,19 @@ class NeuralNetwork:
         for i in range(self.layers):
             if i == 0:
                 layer = self.weights[0].dot(np.vstack((input.transpose(), np.ones([1,input.shape[0]]))))
+                self.layerOut.append(np.tanh(layer))
             else:
                 layer = self.weights[i].dot(np.vstack((self.layerOut[-1], np.ones([1,input.shape[0]]))))
+                if i == self.layers-1:
+                    self.layerOut.append(layer)
+                else:
+                    self.layerOut.append(np.tanh(layer))
             self.layerIn.append(layer)
-            self.layerOut.append(np.tanh(layer))
+
 
         return self.layerOut[-1].T
 
-    def backpropogate(self, input, y, learning_rate):
+    def backPropagate(self, input, y, learning_rate):
         deltas = []
         y_hat = self.run(input)
 
@@ -55,10 +78,11 @@ class NeuralNetwork:
 
             #for last layer
             if i == self.layers-1:
-                out_delt = self.layerOut[i] - y.T
-                msq_error = np.sum(.5 * ((out_delt) ** 2))
+                output_delta = self.layerOut[i] - y.T
+                msq_error = np.sum(.5 * ((output_delta) ** 2))
+
                 #returns delta, k columns for k inputs, m rows for m nodes
-                deltas.append(out_delt * self.dertanh(self.layerIn[i]))
+                deltas.append(output_delta * self.dertanh(self.layerIn[i]))
             else:
                 #backprop -- uses subsequents layer delta to calculate next delta
                 last_deltas = self.weights[i+1].T.dot(deltas[-1])
@@ -88,17 +112,16 @@ class NeuralNetwork:
                                   (learning_rate * weight_deltas[i])
 
         update_weights(self, wdelta, learning_rate)
-
         return msq_error
-
         #end backpropogate
 
     def train(self, input, target, lr, run_iter):
         for i in range(run_iter):
-            a = self.backpropogate(input, target, lr)
-            if i % 5000 == 0:
+            a = self.backPropagate(input, target, lr)
+            if i % 2000 == 0:
                 print "Training..."
-            if run_iter - i == 1: print a
+                print a/10000
+            if run_iter - i == 1: print "Finished!"
 
 
 
