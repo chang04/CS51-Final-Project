@@ -3,7 +3,7 @@ import numpy as np
 import scipy as sp
 import pylab as pl
 
-csv_filename = 'parse/1500movie_data.csv'
+csv_filename = 'parse/1500movies_with_gross.csv'
 
 budget = []
 genre = []
@@ -12,6 +12,7 @@ runtime = []
 rating = []
 gross = []
 ndat = 1500
+odat = 500
 ncol = 6
 gr = []
 trsubset = np.zeros((ndat, ncol))
@@ -91,12 +92,40 @@ def decisiontree(md, dat, feature):
             return treenode(res = count(data))
     tree = build(dat, 0)
     #printtree(tree)
-    return predict([25000000,2,3,104,6.8], tree)
+    prediction = []
+    obudget = []
+    ogenre = []
+    ompaa = []
+    oruntime = []
+    orating = []
+
+    test_filename = 'parse/500movies_no_gross.csv'
+    with open(test_filename, 'r') as csv_fh:
+
+        reader = csv.reader(csv_fh)
+
+        # Skip the header line
+        next(reader, None)
+
+        # Loop over the file by rows and fill in arrays for features
+        for row in reader:
+            obudget.append(float(row[1]))
+            ogenre.append(float(row[2]))
+            ompaa.append(float(row[3]))
+            oruntime.append(float(row[4]))
+            orating.append(float(row[5]))
+    print(len(obudget))
+
+    for x in range(0, odat):
+            prediction.append(predict([obudget[x], ogenre[x], ompaa[x], oruntime[x], orating[x]], tree))
+    prediction = np.array(prediction)
+    return prediction
 
 # Construct a random forest by aggregating B decision trees with
 # Boostrapped data subset and random selection without replacement
 # of the features
 def randomforest(B, mtry, mdepth):
+    summ = 0
     for x in range(1, B + 1):
         for y in range(0, ndat):
             ran = np.random.randint(1, ndat)
@@ -104,10 +133,19 @@ def randomforest(B, mtry, mdepth):
                 trsubset[y][z] = total[z][ran]
                 gr.append(gross[ran])
         featsubset = np.random.choice(5, mtry, replace = False)
-        decisiontree(mdepth, trsubset, featsubset)
+        summ += decisiontree(mdepth, trsubset, featsubset)
+    prediction = summ / B
+    print(prediction)
+    return prediction
 
 def main():
-    randomforest(1, 2, 5)
+    prediction = randomforest(10, 2, 5)
+    output = 'predictions_500.csv'
+    with open(output, "w+") as f:
+        f.write("Prediction\n")
+        for i in prediction:
+            f.write("%d\n" % i)
+
 
 # Representation of tree as a decisionnode class;
 # referenced "Programming Collective Intelligence" by Toby Segaran
