@@ -16,6 +16,8 @@ class NeuralNetwork:
         for i in range(0,self.layers):
             n = shape[i]
             m = shape[i+1]
+            print n
+            print m
             self.weights.append(np.random.normal(scale=0.2, size = (m,n+1)))
 
     def sgm(self, x):
@@ -97,15 +99,15 @@ class NeuralNetwork:
 
 
 
-bpn = NeuralNetwork([2,2,1])
+"""bpn = NeuralNetwork([2,2,1])
 y = np.array([[1,2],[3,4],[9,1]])
 x = np.array([[1,2]])
 z = np.array([[0,0],[1,1],[0,1],[1,0]])
 target = np.array([[0.05],[0.05],[0.95],[0.95]])
 output = np.array([[6]])
 
+bpn.train(z,target,.2,1000)"""
 
-bpn.train(z, target, .2, 10000000)
 
 
 
