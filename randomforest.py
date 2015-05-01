@@ -33,6 +33,7 @@ with open(csv_filename, 'r') as csv_fh:
         rating.append(float(row[5]))
         gross.append(float(row[6]))
 
+total = [budget, genre, mpaa, runtime, rating]
 budget = np.array(budget)
 genre = np.array(genre)
 mpaa = np.array(mpaa)
@@ -40,48 +41,53 @@ runtime = np.array(runtime)
 rating = np.array(rating)
 gross = np.array(gross)
 
-print(np.argmax(gross))
-pl.plot(gross, rating, 'o', color = 'b')
-pl.show()
+#print(np.argmax(gross))
+#pl.plot(gross, rating, 'o', color = 'b')
+#pl.show()
 
-#def decisiontree(data, feature):
-    #use CART to create a decisiontree
+def decisiontree(data, feature, mtry):
+    treefeat = np.zeros((ndat, mtry))
+    for y in range(0, ndat):
+        treefeat
 
 def randomforest(B, mtry):
-    for x in range(1, B):
+    for x in range(1, B + 1):
         for y in range(0, ndat):
             ran = np.random.randint(1, ndat)
-            trsubset[y][0] = budget[ran]
-            trsubset[y][1] = genre[ran]
-            trsubset[y][2] = mpaa[ran]
-            trsubset[y][3] = runtime[ran]
-            trsubset[y][4] = rating[ran]
-            gr.append(gross[ran])
+            for z in range(0, 5):
+                trsubset[y][z] = total[z][ran]
+                gr.append(gross[ran])
         featsubset = np.random.choice(5, mtry, replace = False)
-        #decisiontree(trsubset, )
+        decisiontree(trsubset, featsubset, mtry)
 
 def main():
-    randomforest(2, 3)
-    print(trsubset)    
+    randomforest(1, 3)
+
+class decisionnode:
+    def __init__(self,col=-1,value=None,results=None,tb=None,fb=None):
+        self.col=col
+        self.value=value
+        self.results=results
+        self.tb=tb
+        self.fb=fb
+
+# Gini impurity tells us the probability of a mistake in categorizing that item.
+def giniimpurity(lst):
+    total = len(lst)
+    counts = {}
+    for i in lst:
+        counts.setdefault(i,0)
+        counts[i]+=1
+
+    impurity = 0
+    for j in lst:
+        f1 = float(counts[j]) / total
+        for k in lst:
+            if j == k : continue
+            f2 = float(counts[k]) / total
+            impurity += (f1 * f2)
+    return imp
 
 if __name__ == "__main__":
     main()
-    
-    
-    
-# Gini impurity tells us the probability of a mistake in categorizing that item. 
-def giniimpurity(lst):
-  total = len(lst)
-  counts = {}
-  for i in lst:
-    counts.setdefault(i,0)
-    counts[i]+=1
 
-  impurity = 0
-  for j in lst:
-    f1 = float(counts[j]) / total
-    for k in lst:
-      if j == k : continue
-      f2 = float(counts[k]) / total
-      impurity += (f1 * f2)
-  return imp
