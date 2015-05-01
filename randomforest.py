@@ -56,35 +56,42 @@ def decisiontree(md, dat, feature):
 
     # Recursive function for constructing a decision tree
     def build(data, i):
-
+        print("ininininininininiinininininininininininininininini")
         # optimal values to keep track of
         opt_infogain = 0.
         opt_cond = None
         opt_split = None
         var = variance(data)
-
+        inn = 0
         if len(data) == 0:
             return treenode()
 
         for x in feature:
-            tempdat = []
+            print(feature)
+            print(x)
+            print("int = " + str(inn))
+            inn+=1
+            tempdat = {}
             for film in data:
-                tempdat.append(film[x])
+                tempdat[film[x]] = 0
+            print(len(tempdat))
             for val in tempdat:
                 (d1, d2) = binsplit(data, x, val)
                 p = float(len(d1)) / len(data)
-                print(p)
+                #print(p)
                 gain = var - p*variance(d1) - (1-p)*variance(d2)
                 if gain > opt_infogain and len(d1) > 0 and len(d2) > 0:
                     opt_infogain = gain
                     opt_cond = (x, val)
                     opt_split = (d1, d2)
         if opt_infogain > 0 and i < md:
+            print("aaaaaaaaaaaaaaannnnnnnnnnnnnnnnnddddddddddd innnnnnnnnnt is: " + str(i))
             return treenode(col = opt_cond[0], val = opt_cond[1], tnode = build(opt_split[0], i+1), fnode = build(opt_split[1], i+1))
         else:
             return treenode(res = count(data))
     tree = build(dat, 0)
-    printtree(tree)
+    #printtree(tree)
+    return predict([25000000,2,3,104,6.8], tree)
 
 # Construct a random forest by aggregating B decision trees with
 # Boostrapped data subset and random selection without replacement
@@ -100,7 +107,7 @@ def randomforest(B, mtry, mdepth):
         decisiontree(mdepth, trsubset, featsubset)
 
 def main():
-    randomforest(1, 3, 2)
+    randomforest(1, 2, 5)
 
 # Representation of tree as a decisionnode class;
 # referenced "Programming Collective Intelligence" by Toby Segaran
@@ -149,6 +156,23 @@ def printtree(tree,indent=''):
         printtree(tree.tnode,indent+'  ')
         print indent+'F->',
         printtree(tree.fnode,indent+'  ')
+
+def predict(inp, tree):
+    if tree.res != None:
+        summ = 0
+        num = 0
+        for key in tree.res:
+            summ += key * tree.res[key]
+            num += tree.res[key]
+        return summ / num
+    else:
+        v = inp[tree.col]
+        branch = None
+        if v >= tree.val:
+            branch = tree.tnode
+        else:
+            branch = tree.fnode
+        return predict(inp, branch)
 
 if __name__ == "__main__":
     main()
