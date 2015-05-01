@@ -53,12 +53,27 @@ class NeuralNetwork:
             else:
                 error = self.weights[i+1][:, :-1].dot(output[-1])
                 output.append(self.dersgm(self.layerOut[i]) * error)
+
         return output
 
-    def correct_weights(self, deltas, learning_rate):
+    def weight_delta(self, deltas):
+        instance_weight_list = []
+        ordered_deltas = list(reversed(deltas))
+        output = []
+
+        for i in range(self.layers):
+            if i == 0:
+                instance_weight_list.append(ordered_deltas[i].T * input)
+                print input
+            else:
+                instance_weight_list.append(ordered_deltas[i].T * self.layerOut[i])
 
 
+        return instance_weight_list
 
 bpn = NeuralNetwork([2,2,1])
 input = np.array([[1,2],[3,4]])
 output = np.array([2,5])
+deltas = bpn.delta(input, output)
+bpn.weight_delta(deltas)
+"""print bpn.weight_delta(deltas)"""
