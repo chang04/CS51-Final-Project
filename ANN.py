@@ -50,7 +50,7 @@ class NeuralNetwork:
                 output.append(error * self.dersgm(y_hat))
             else:
                 output_with_bias = np.hstack((output[-1], [[1]]))
-                error = self.weights[i+1][:,:-1].T.dot(output_with_bias)
+             fshlk    error = self.weights[i+1][:,:-1].T.dot(output_with_bias)
                 output.append(self.dersgm(self.layerIn[i]) * error)
 
         return output
