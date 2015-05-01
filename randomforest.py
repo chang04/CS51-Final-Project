@@ -45,7 +45,7 @@ gross = np.array(gross)
 #pl.plot(gross, rating, 'o', color = 'b')
 #pl.show()
 
-def decisiontree(data, feature, mtry):
+def decisiontree(mdepth, data, feature):
     treefeat = np.zeros((ndat, mtry))
     for y in range(0, ndat):
         treefeat
@@ -63,13 +63,26 @@ def randomforest(B, mtry):
 def main():
     randomforest(1, 3)
 
+#representation of tree as a decisionnode class;
+#referenced "Programming Collective Intelligence" by Toby Segaran
 class decisionnode:
-    def __init__(self,col=-1,value=None,results=None,tb=None,fb=None):
-        self.col=col
-        self.value=value
-        self.results=results
-        self.tb=tb
-        self.fb=fb
+    def __init__(self, col=-1, val=None, res=None, tnode=None, fnode=None):
+        self.col = col
+        self.val = val
+        self.res = res
+        self.tnode = tnode
+        self.fnode = fnode
+
+def divideset(rows, column, value):
+    splitfn = None
+    if isinstance(value, int) or isinstance(value, float):
+        splitfn = lambda row:row[column] >= value
+    else:
+        splitfn = lambda row:row[column] == value
+
+    set1 = [row for row in rows if split_function(row)]
+    set2 = [row for row in rows if not split_function(row)]
+    return (set1, set2)
 
 # Gini impurity tells us the probability of a mistake in categorizing that item.
 def giniimpurity(lst):
