@@ -46,21 +46,23 @@ gross = np.array(gross)
 #pl.show()
 
 def decisiontree(md, dat, feature):
-    treefeat = np.zeros((ndat, 3))
-    for x in range(0, ndat):
-        for y in range(0, 3):
-            treefeat[x][y] = dat[x][feature[y]]
+    #treefeat = np.zeros((ndat, 3))
+    #for x in range(0, ndat):
+    #    for y in range(0, 3):
+    #        treefeat[x][y] = dat[x][feature[y]]
     #print(treefeat)
     def build(data, i):
         if len(data) == 0:
             return treenode()
-        curr_gini = giniimpurity(data)
 
         opt_gain = 0.
         opt_crit = None
         opt_set = None
+
+        gini = giniimpurity(data)
+
         print(feature)
-        for x in range(0, 5):#feature:
+        for x in feature:
             colval = {}
             for film in data:
                 colval[film[x]] = 1
@@ -68,7 +70,8 @@ def decisiontree(md, dat, feature):
                 (s1, s2) = divideset(data, x, val)
                 p = float(len(s1)) / len(data)
                 print(p)
-                gain = curr_gini - p*giniimpurity(s1) - (1-p)*giniimpurity(s2)
+                gain = giniimpurity(s1)
+                gain = gini - p*giniimpurity(s1) - (1-p)*giniimpurity(s2)
                 if gain > opt_gain and len(s1) > 0 and len(s2) > 0:
                     opt_gain = gain
                     opt_crit = (x, val)
@@ -92,7 +95,7 @@ def randomforest(B, mtry, mdepth):
         decisiontree(mdepth, trsubset, featsubset)
 
 def main():
-    randomforest(1, 3, 2)
+    randomforest(1, 3, 5)
 
 #representation of tree as a decisionnode class;
 #referenced "Programming Collective Intelligence" by Toby Segaran
