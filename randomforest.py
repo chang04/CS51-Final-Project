@@ -12,9 +12,7 @@ runtime = []
 rating = []
 gross = []
 ndat = 1500
-mdepth = 10
-mtry = 3
-ncol = 5
+ncol = 6
 gr = []
 trsubset = np.zeros((ndat, ncol))
 
@@ -28,7 +26,6 @@ with open(csv_filename, 'r') as csv_fh:
 
     #Loop over the file
     for row in reader:
-
         budget.append(float(row[1]))
         genre.append(float(row[2]))
         mpaa.append(float(row[3]))
@@ -36,7 +33,7 @@ with open(csv_filename, 'r') as csv_fh:
         rating.append(float(row[5]))
         gross.append(float(row[6]))
 
-total = [budget, genre, mpaa, runtime, rating]
+total = [budget, genre, mpaa, runtime, rating, gross]
 budget = np.array(budget)
 genre = np.array(genre)
 mpaa = np.array(mpaa)
@@ -48,54 +45,57 @@ gross = np.array(gross)
 #pl.plot(gross, rating, 'o', color = 'b')
 #pl.show()
 
-def decisiontree(md, dat, feature, mtry):
-    treefeat = np.zeros((ndat, mtry))
-    for x in range(0, ndat):
-        for y in range(0, mtry):
-            treefeat[x][y] = dat[x][feature[y]]
+def decisiontree(md, dat, feature):
+    #treefeat = np.zeros((ndat, 3))
+    #for x in range(0, ndat):
+    #    for y in range(0, 3):
+    #        treefeat[x][y] = dat[x][feature[y]]
     #print(treefeat)
-    def build(data):
+    def build(data, i):
         if len(data) == 0:
             return treenode()
-        curr_gini = giniimpurity(data)
 
         opt_gain = 0.
         opt_crit = None
         opt_set = None
 
-        colcount = len(data[1]) - 1
-        for x in range(0, colcount):
+        gini = giniimpurity(data)
+
+        print(feature)
+        for x in feature:
             colval = {}
             for film in data:
                 colval[film[x]] = 1
             for val in colval.keys():
                 (s1, s2) = divideset(data, x, val)
                 p = float(len(s1)) / len(data)
-                gain = curr_gini - p*giniimpurity(s1) - (1-p)*giniimpurity(s2)
+                print(p)
+                gain = giniimpurity(s1)
+                gain = gini - p*giniimpurity(s1) - (1-p)*giniimpurity(s2)
                 if gain > opt_gain and len(s1) > 0 and len(s2) > 0:
                     opt_gain = gain
                     opt_crit = (x, val)
                     opt_set = (s1, s2)
-        if opt_gain > 0:
-            tBranch = build(opt_set[0])
-            fBranch = build(opt_set[1])
-            return treenode(col = opt_crit[0], val = opt_crit[1], tnode = tBrance, fnode = fBranch)
+        if opt_gain > 0 and i <= md:
+            tBranch = build(opt_set[0], i + 1)
+            fBranch = build(opt_set[1], i + 1)
+            return treenode(col = opt_crit[0], val = opt_crit[1], tnode = tBranch, fnode = fBranch)
         else:
             return treenode(res = uniquecounts(data))
-    tree = build(treefeat)
+    tree = build(dat, 0)
 
-def randomforest(B, mtry):
+def randomforest(B, mtry, mdepth):
     for x in range(1, B + 1):
         for y in range(0, ndat):
             ran = np.random.randint(1, ndat)
-            for z in range(0, 5):
+            for z in range(0, 6):
                 trsubset[y][z] = total[z][ran]
                 gr.append(gross[ran])
         featsubset = np.random.choice(5, mtry, replace = False)
-        decisiontree(mdepth, trsubset, featsubset, mtry)
+        decisiontree(mdepth, trsubset, featsubset)
 
 def main():
-    randomforest(1, 3)
+    randomforest(1, 3, 5)
 
 #representation of tree as a decisionnode class;
 #referenced "Programming Collective Intelligence" by Toby Segaran
