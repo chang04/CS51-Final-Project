@@ -3,7 +3,7 @@ import numpy as np
 import scipy as sp
 import pylab as pl
 
-csv_filename = 'parse/1500movies_with_gross.csv'
+csv_filename = 'Neural/1500movies_with_gross.csv'
 
 budget = []
 genre = []
