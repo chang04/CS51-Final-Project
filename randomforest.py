@@ -18,13 +18,12 @@ trsubset = np.zeros((ndat, ncol))
 
 with open(csv_filename, 'r') as csv_fh:
 
-    #Parse as a CSV file
     reader = csv.reader(csv_fh)
 
-    #Skip header line
+    # Skip the header line
     next(reader, None)
 
-    #Loop over the file
+    # Loop over the file by rows and fill in arrays for features
     for row in reader:
         budget.append(float(row[1]))
         genre.append(float(row[2]))
@@ -33,6 +32,7 @@ with open(csv_filename, 'r') as csv_fh:
         rating.append(float(row[5]))
         gross.append(float(row[6]))
 
+# Store the data as numpy array
 total = [budget, genre, mpaa, runtime, rating, gross]
 budget = np.array(budget)
 genre = np.array(genre)
@@ -45,45 +45,50 @@ gross = np.array(gross)
 #pl.plot(gross, rating, 'o', color = 'b')
 #pl.show()
 
+# Create individual decision tree with the maximum depth md
+#and the given subset of data and features
 def decisiontree(md, dat, feature):
     #treefeat = np.zeros((ndat, 3))
     #for x in range(0, ndat):
     #    for y in range(0, 3):
     #        treefeat[x][y] = dat[x][feature[y]]
     #print(treefeat)
+
+    # Recursive function for constructing a decision tree
     def build(data, i):
+
+        # optimal values to keep track of
+        opt_infogain = 0.
+        opt_cond = None
+        opt_split = None
+        var = variance(data)
+
         if len(data) == 0:
             return treenode()
 
-        opt_gain = 0.
-        opt_crit = None
-        opt_set = None
-
-        gini = giniimpurity(data)
-
-        print(feature)
         for x in feature:
-            colval = {}
+            tempdat = []
             for film in data:
-                colval[film[x]] = 1
-            for val in colval.keys():
-                (s1, s2) = divideset(data, x, val)
-                p = float(len(s1)) / len(data)
+                tempdat.append(film[x])
+            for val in tempdat:
+                (d1, d2) = binsplit(data, x, val)
+                p = float(len(d1)) / len(data)
                 print(p)
-                gain = giniimpurity(s1)
-                gain = gini - p*giniimpurity(s1) - (1-p)*giniimpurity(s2)
-                if gain > opt_gain and len(s1) > 0 and len(s2) > 0:
-                    opt_gain = gain
-                    opt_crit = (x, val)
-                    opt_set = (s1, s2)
-        if opt_gain > 0 and i <= md:
-            tBranch = build(opt_set[0], i + 1)
-            fBranch = build(opt_set[1], i + 1)
-            return treenode(col = opt_crit[0], val = opt_crit[1], tnode = tBranch, fnode = fBranch)
+                gain = var - p*variance(d1) - (1-p)*variance(d2)
+                if gain > opt_infogain and len(d1) > 0 and len(d2) > 0:
+                    opt_infogain = gain
+                    opt_cond = (x, val)
+                    opt_split = (d1, d2)
+        if opt_infogain > 0 and i < md:
+            return treenode(col = opt_cond[0], val = opt_cond[1], tnode = build(opt_split[0], i+1), fnode = build(opt_split[1], i+1))
         else:
-            return treenode(res = uniquecounts(data))
+            return treenode(res = count(data))
     tree = build(dat, 0)
+    printtree(tree)
 
+# Construct a random forest by aggregating B decision trees with
+# Boostrapped data subset and random selection without replacement
+# of the features
 def randomforest(B, mtry, mdepth):
     for x in range(1, B + 1):
         for y in range(0, ndat):
@@ -95,10 +100,10 @@ def randomforest(B, mtry, mdepth):
         decisiontree(mdepth, trsubset, featsubset)
 
 def main():
-    randomforest(1, 3, 5)
+    randomforest(1, 3, 2)
 
-#representation of tree as a decisionnode class;
-#referenced "Programming Collective Intelligence" by Toby Segaran
+# Representation of tree as a decisionnode class;
+# referenced "Programming Collective Intelligence" by Toby Segaran
 class treenode:
     def __init__(self, col=-1, val=None, res=None, tnode=None, fnode=None):
         self.col = col
@@ -107,40 +112,43 @@ class treenode:
         self.tnode = tnode
         self.fnode = fnode
 
-def divideset(rows, column, value):
-    splitfn = lambda row:row[column] >= value
-    set1 = [row for row in rows if splitfn(row)]
-    set2 = [row for row in rows if not splitfn(row)]
-    return (set1, set2)
+def binsplit(data, col, val):
+    splitfn = lambda row:row[col] >= val
+    d1 = [row for row in data if splitfn(row)]
+    d2 = [row for row in data if not splitfn(row)]
+    return (d1, d2)
 
-# Gini impurity tells us the probability of a mistake in categorizing that item.
-def giniimpurity(lst):
-    total = len(lst)
-    counts = {}
-    for dat in lst:
-        last = dat[len(dat) - 1]
-        if last not in counts:
-            counts[last] = 0
-        counts[last] += 1
-    impurity = 0
-    for j in counts:
-        f1 = float(counts[j]) / total
-        for k in counts:
-            if j == k : continue
-            f2 = float(counts[k]) / total
-            impurity += (f1 * f2)
-    return impurity
+def variance(data):
+    gross = []
+    if len(data) == 0:
+        return 0
+    for row in data:
+        gross.append(float(row[len(row) - 1]))
+    variance = sum([(i - (sum(gross)/len(gross)))**2 for i in gross])/len(gross)
+    return variance
 
-# Create counts of possible results (the last column of
-# each row is the result)
-def uniquecounts(rows):
-    results={}
-    for row in rows:
-        # The result is the last column
-        r=row[len(row)-1]
-        if r not in results: results[r]=0
-        results[r]+=1
-    return results
+def count(data):
+    count = {}
+    for row in data:
+        last = row[len(row) - 1]
+        if last not in count:
+            count[last] = 0
+        count[last] += 1
+    return count
+
+def printtree(tree,indent=''):
+    # Is this a leaf node?
+    if tree.res!=None:
+        print str(tree.res)
+    else:
+        # Print the criteria
+        print str(tree.col)+':'+str(tree.val)+'? '
+
+        # Print the branches
+        print indent+'T->',
+        printtree(tree.tnode,indent+'  ')
+        print indent+'F->',
+        printtree(tree.fnode,indent+'  ')
 
 if __name__ == "__main__":
     main()
