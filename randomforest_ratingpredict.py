@@ -152,7 +152,11 @@ def randomforest(B, mtry, mdepth):
 # Main function
 def main():
 
-    prediction = randomforest(10, 2, 5)
+    ntree = input("Enter the number of trees of the random forest: ")
+    mtry = input("Enter the number of features (less than or equal to 5): ")
+    mdepth = input("Enter the maximum depth of the decision tree: ")
+
+    prediction = randomforest(ntree, mtry, mdepth)
     output = 'Prediction/predictions_500.csv'
 
     # Write the prediction as a csv file
